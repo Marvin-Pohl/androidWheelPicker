@@ -54,6 +54,10 @@ public class AndroidSpinner extends View {
 				R.styleable.androidWheelSpinner);
 		// Get Value Array from the in the XML file specified Resource
 		values = a.getTextArray(R.styleable.androidWheelSpinner_values);
+		if (values == null) {
+			values = new String[0];
+		}
+
 	}
 
 	/*
