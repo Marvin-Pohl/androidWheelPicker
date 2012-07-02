@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 
 /**
@@ -27,12 +28,15 @@ public class AndroidSpinner extends View {
 	private CharSequence[] values;
 	float textScale = 0;
 	final float gradientPercentage = 0.3f;
+	float previousY = -1;
+	WheelScrolling scrolling;
 
 	/**
 	 * @param context
 	 */
 	public AndroidSpinner(Context context) {
 		super(context);
+		values = new String[0];
 		initView();
 	}
 
@@ -74,6 +78,7 @@ public class AndroidSpinner extends View {
 	private void initView() {
 		setBackgroundDrawable(getResources().getDrawable(
 				R.drawable.wheelspinnerbggradient));
+		scrolling = new WheelScrolling(values.length, this);
 	}
 
 	/*
@@ -128,7 +133,41 @@ public class AndroidSpinner extends View {
 	 * @param canvas
 	 */
 	public void drawEntries(Canvas canvas) {
-		// TODO drawEntries
+		Paint paint = getTextPaint();
+		String value;
+		float x, y;
+		float scrollPos;
+		synchronized (scrolling) {
+
+			scrollPos = scrolling.getSpinPos() % (values.length);
+			for (int i = 0; i < values.length; i++) {
+				System.out.println("ScrollPos:" + scrollPos);
+				// Mark the current selected value.
+				if (i == Math.round(scrollPos)) {
+					paint.setARGB(255, 255, 0, 0);
+				} else {
+					paint = getTextPaint();
+				}
+				value = (String) values[i];
+				// Draw the value at index i
+				x = getWidth() / 2 - paint.measureText(value) / 2;
+				y = getHeight() / 2f + (i - scrollPos) * textScale + textScale
+						/ 2f;
+				canvas.drawText(value, x, y, paint);
+
+				paint = getTextPaint();
+				// Draw the array above and below the main array, to prevent
+				// jumping while trespassing array Bounds.
+				y = getHeight() / 2f + ((i + values.length) - scrollPos)
+						* textScale + textScale / 2f;
+				canvas.drawText(value, x, y, paint);
+				y = getHeight() / 2f + ((i - values.length) - scrollPos)
+						* textScale + textScale / 2f;
+				canvas.drawText(value, x, y, paint);
+			}
+			// System.out.println("### Redrawing");
+		}
+
 	}
 
 	/*
@@ -155,8 +194,19 @@ public class AndroidSpinner extends View {
 		if (mode == MeasureSpec.EXACTLY) {
 			result = width;
 		} else {
-			// TODO calculate width of the spinner.
-			result = getPaddingLeft() + getPaddingRight() + 100;
+
+			if (values.length > 0) {
+				Paint paint = getTextPaint();
+				int tempRes = 0;
+				result = (int) paint.measureText((String) values[0]);
+				for (int i = 1; i < values.length; i++) {
+					tempRes = (int) paint.measureText((String) values[i]);
+					if (result < tempRes) {
+						result = tempRes;
+					}
+				}
+			}
+			result += getPaddingLeft() + getPaddingRight();
 			if (mode == MeasureSpec.AT_MOST) {
 				result = Math.min(width, result);
 			}
@@ -199,4 +249,36 @@ public class AndroidSpinner extends View {
 		return paint;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.view.View#onTouchEvent(android.view.MotionEvent)
+	 */
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		int action = event.getAction();
+		switch (action) {
+		case MotionEvent.ACTION_MOVE:
+			if (previousY == -1) {
+				previousY = event.getY();
+			} else {
+				float spinSpeed = (previousY - event.getY()) / (textScale / 30);
+				// if (spinSpeed > scrolling.getSpinSpeed()) {
+
+				scrolling.setSpinSpeed(spinSpeed);
+				previousY = event.getY();
+				// }
+				// invalidate();
+			}
+			break;
+		case MotionEvent.ACTION_DOWN:
+			scrolling.setSnapping(false);
+			break;
+		case MotionEvent.ACTION_UP:
+			scrolling.setSnapping(true);
+			previousY = -1;
+			break;
+		}
+		return true;
+	}
 }
