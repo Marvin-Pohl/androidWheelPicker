@@ -48,35 +48,35 @@ public class WheelScrolling extends TimerTask {
 	public void run() {
 		float elapsedTime = (updateInterval / 1000f);
 		float tempScrollFactor = scrollFactor;
-		float snappingValue = 1f;
+		float snappingValue = 1.5f;
+		float distance = 0;
 		synchronized (this) {
 			if (spinSpeed < snappingValue && spinSpeed > -snappingValue) {
 				// Increase the factor, that the Scrolling speed come to rest
 				tempScrollFactor *= 5;
 
-			}
-			// Update Spinning Position about the elapsed Interval
-			setSpinPos(getSpinPos() + getSpinSpeed() * elapsedTime);
-			// Keep spinPos between the ArrayBounds
-			if (spinPos > valuesLength) {
-				// spinPos = 0;
-			}
-			if (spinPos <= 0) {
-				spinPos = valuesLength;
-			}
-			// Decrease spinSpeed
-			setSpinSpeed(getSpinSpeed() - getSpinSpeed() * elapsedTime
-					* tempScrollFactor);
+			} else {
 
-			// Calculate the Position of the current index
-			// TODO fix broken State between Last and First Value
-			setPosition(Math.round(getSpinPos()));
+				// Update Spinning Position about the elapsed Interval
+				setSpinPos(getSpinPos() + getSpinSpeed() * elapsedTime);
+				// Keep spinPos between the ArrayBounds
+				if (spinPos >= valuesLength - 0.5f) {
+					spinPos = -0.49f;
+				}
+				if (spinPos <= -0.5f) {
+					spinPos = valuesLength - 0.51f;
+				}
+				// Decrease spinSpeed
+				setSpinSpeed(getSpinSpeed() - getSpinSpeed() * elapsedTime
+						* tempScrollFactor);
+			}
 
 			if (spinSpeed < snappingValue && spinSpeed > -snappingValue
 					&& snapping) {
 				// Snap to the current Value
 
-				float distance = getSpinPos() - getPosition();
+				distance = getSpinPos() - getPosition();
+				// Clamp the distance Vector,to get not to fast.
 				if (distance > 0.5f) {
 					distance = 0.5f;
 				} else if (distance < -0.5f) {
@@ -85,7 +85,11 @@ public class WheelScrolling extends TimerTask {
 				setSpinPos(getSpinPos() - distance * elapsedTime
 						* tempScrollFactor);
 			}
+			// Calculate the Position of the current index
+			setPosition(Math.round(getSpinPos()));
+
 			// Tell the view, that it should redraw itself
+
 			rootView.postInvalidate();
 
 		}

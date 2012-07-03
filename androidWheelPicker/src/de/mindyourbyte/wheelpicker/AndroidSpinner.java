@@ -137,32 +137,36 @@ public class AndroidSpinner extends View {
 		String value;
 		float x, y;
 		float scrollPos;
+		float yAddition;
+		int selectedPos;
 		synchronized (scrolling) {
 
 			scrollPos = scrolling.getSpinPos() % (values.length);
+			selectedPos = Math.round(scrolling.getSpinPos()) % (values.length);
+
 			for (int i = 0; i < values.length; i++) {
-				System.out.println("ScrollPos:" + scrollPos);
 				// Mark the current selected value.
-				if (i == Math.round(scrollPos)) {
+				if (i == selectedPos) {
 					paint.setARGB(255, 255, 0, 0);
 				} else {
 					paint = getTextPaint();
 				}
 				value = (String) values[i];
+				// Fix Values to display selected Value in the center of the
+				// View.
+				yAddition = getHeight() / 2f + textScale / 2f
+						- paint.getFontMetrics().descent;
 				// Draw the value at index i
 				x = getWidth() / 2 - paint.measureText(value) / 2;
-				y = getHeight() / 2f + (i - scrollPos) * textScale + textScale
-						/ 2f;
+				y = (i - scrollPos) * textScale + yAddition;
 				canvas.drawText(value, x, y, paint);
 
 				paint = getTextPaint();
 				// Draw the array above and below the main array, to prevent
 				// jumping while trespassing array Bounds.
-				y = getHeight() / 2f + ((i + values.length) - scrollPos)
-						* textScale + textScale / 2f;
+				y = ((i + values.length) - scrollPos) * textScale + yAddition;
 				canvas.drawText(value, x, y, paint);
-				y = getHeight() / 2f + ((i - values.length) - scrollPos)
-						* textScale + textScale / 2f;
+				y = ((i - values.length) - scrollPos) * textScale + yAddition;
 				canvas.drawText(value, x, y, paint);
 			}
 			// System.out.println("### Redrawing");
