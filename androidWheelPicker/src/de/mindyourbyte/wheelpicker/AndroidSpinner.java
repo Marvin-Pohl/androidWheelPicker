@@ -26,7 +26,7 @@ import android.view.View;
 
 public class AndroidSpinner extends View {
 	private CharSequence[] values;
-	float textScale = 0;
+	float textScale = 40;
 	final float gradientPercentage = 0.3f;
 	float previousY = -1;
 	WheelScrolling scrolling;
@@ -260,29 +260,6 @@ public class AndroidSpinner extends View {
 	 */
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		int action = event.getAction();
-		switch (action) {
-		case MotionEvent.ACTION_MOVE:
-			if (previousY == -1) {
-				previousY = event.getY();
-			} else {
-				float spinSpeed = (previousY - event.getY()) / (textScale / 30);
-				// if (spinSpeed > scrolling.getSpinSpeed()) {
-
-				scrolling.setSpinSpeed(spinSpeed);
-				previousY = event.getY();
-				// }
-				// invalidate();
-			}
-			break;
-		case MotionEvent.ACTION_DOWN:
-			scrolling.setSnapping(false);
-			break;
-		case MotionEvent.ACTION_UP:
-			scrolling.setSnapping(true);
-			previousY = -1;
-			break;
-		}
-		return true;
+		return scrolling.onTouchEvent(event, textScale);
 	}
 }

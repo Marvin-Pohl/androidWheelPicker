@@ -6,6 +6,7 @@ package de.mindyourbyte.wheelpicker;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.view.MotionEvent;
 import android.view.View;
 
 /**
@@ -24,10 +25,11 @@ public class WheelScrolling extends TimerTask {
 	private int position;
 	private float spinSpeed;
 	private float spinPos;
-	private float scrollFactor = 1;
+	private float scrollFactor = 1.5f;
 	Timer timer;
 	final long updateInterval = 16;
 	View rootView;
+	private float previousY;
 
 	/**
 	 * 
@@ -90,7 +92,11 @@ public class WheelScrolling extends TimerTask {
 
 			// Tell the view, that it should redraw itself
 
-			rootView.postInvalidate();
+			if ((getSpinSpeed() > snappingValue || getSpinSpeed() < -snappingValue)
+					|| (snapping && (distance > 0.01f || distance < -0.01f))) {
+				System.out.println("Post Invalidate " + distance);
+				rootView.postInvalidate();
+			}
 
 		}
 
@@ -184,5 +190,29 @@ public class WheelScrolling extends TimerTask {
 	 */
 	void setSnapping(boolean snapping) {
 		this.snapping = snapping;
+	}
+
+	public boolean onTouchEvent(MotionEvent event, float textScale) {
+		int action = event.getAction();
+		switch (action) {
+		case MotionEvent.ACTION_MOVE:
+			if (previousY == -1) {
+				previousY = event.getY();
+			} else {
+				float spinSpeed = (previousY - event.getY()) / (textScale / 50);
+				setSpinSpeed(spinSpeed);
+				previousY = event.getY();
+
+			}
+			break;
+		case MotionEvent.ACTION_DOWN:
+			setSnapping(false);
+			break;
+		case MotionEvent.ACTION_UP:
+			setSnapping(true);
+			previousY = -1;
+			break;
+		}
+		return true;
 	}
 }
