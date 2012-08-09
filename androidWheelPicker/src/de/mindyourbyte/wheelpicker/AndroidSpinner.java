@@ -30,6 +30,7 @@ public class AndroidSpinner extends View {
 	final float gradientPercentage = 0.3f;
 	float previousY = -1;
 	WheelScrolling scrolling;
+	private boolean trackball_down;
 
 	/**
 	 * @param context
@@ -261,5 +262,37 @@ public class AndroidSpinner extends View {
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		return scrolling.onTouchEvent(event, textScale);
+	}
+
+	/**
+	 * TODO Test functionality
+	 * 
+	 * @see android.view.View#onTrackballEvent(android.view.MotionEvent)
+	 */
+	@Override
+	public boolean onTrackballEvent(MotionEvent event) {
+		// TODO Auto-generated method stub
+		boolean result = super.onTrackballEvent(event);
+		int mEvent = event.getAction();
+		switch (mEvent) {
+		case MotionEvent.ACTION_DOWN:
+			trackball_down = true;
+			result = true;
+			break;
+		case MotionEvent.ACTION_UP:
+			trackball_down = false;
+			result = true;
+		case MotionEvent.ACTION_MOVE:
+			if (trackball_down) {
+				int y = (int) event.getY();
+				if (y == 1 || y == -1) {
+					scrolling.setPosition((scrolling.getPosition() + y)
+							% values.length);
+				}
+				result = true;
+			}
+			break;
+		}
+		return result;
 	}
 }
